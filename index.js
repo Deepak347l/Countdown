@@ -20,7 +20,7 @@ app.get('/get_timer', (req, res) => {
 app.post('/start_timer', (req, res) => {
   if (countdownDuration > 0 && !countdownInterval) {
     countdownInterval = setInterval(() => {
-      countdownDuration -= 1;
+      countdownDuration -= 1000;
       if (countdownDuration === 0) {
         clearInterval(countdownInterval);
         countdownInterval = undefined;
