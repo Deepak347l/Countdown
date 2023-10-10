@@ -4,31 +4,44 @@ const app = express();
 
 app.use(bodyParser.json());
 
-let countdownDuration = 0;
-let countdownInterval;
+// Store timers for each user
+const userTimers = {};
 
-app.post('/set_timer', (req, res) => {
+app.post('/set_timer/:userId', (req, res) => {
+  const { userId } = req.params;
   const { duration } = req.body;
-  countdownDuration = duration;
+
+  // Create a new timer for the user
+  userTimers[userId] = { duration, interval: undefined };
   res.json({ message: 'Countdown timer set successfully!' });
 });
 
-app.get('/get_timer', (req, res) => {
-  res.json({ duration: countdownDuration });
+app.get('/get_timer/:userId', (req, res) => {
+  const { userId } = req.params;
+  const userTimer = userTimers[userId];
+
+  if (userTimer) {
+    res.json({ duration: userTimer.duration });
+  } else {
+    res.status(404).json({ message: 'User not found or timer not set.' });
+  }
 });
 
-app.post('/start_timer', (req, res) => {
-  if (countdownDuration > 0 && !countdownInterval) {
-    countdownInterval = setInterval(() => {
-      countdownDuration -= 1000;
-      if (countdownDuration === 0) {
-        clearInterval(countdownInterval);
-        countdownInterval = undefined;
+app.post('/start_timer/:userId', (req, res) => {
+  const { userId } = req.params;
+  const userTimer = userTimers[userId];
+
+  if (userTimer && userTimer.duration > 0 && !userTimer.interval) {
+    userTimer.interval = setInterval(() => {
+      userTimer.duration -= 1000;
+      if (userTimer.duration === 0) {
+        clearInterval(userTimer.interval);
+        userTimer.interval = undefined;
       }
     }, 1000);
     res.json({ message: 'Countdown timer started!' });
   } else {
-    res.json({ message: 'No countdown timer set or timer already running.' });
+    res.status(404).json({ message: 'User not found or timer already running.' });
   }
 });
 
